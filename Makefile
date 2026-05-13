@@ -1,3 +1,6 @@
+REPO_ROOT := $(CURDIR)
+FRONTEND_DIR := $(REPO_ROOT)/frontend
+
 PYTHON ?= python3
 NPM ?= npm
 
@@ -25,33 +28,33 @@ help:
 install: install-backend install-frontend
 
 install-backend:
-	$(PYTHON) -m pip install -r /home/runner/work/Facttrack/Facttrack/requirements.txt
+	cd $(REPO_ROOT) && $(PYTHON) -m pip install -r requirements.txt
 
 install-frontend:
-	cd /home/runner/work/Facttrack/Facttrack/frontend && $(NPM) ci
+	cd $(FRONTEND_DIR) && $(NPM) ci
 
 init-db:
-	cd /home/runner/work/Facttrack/Facttrack && $(PYTHON) -m scripts.init_db
+	cd $(REPO_ROOT) && $(PYTHON) -m scripts.init_db
 
 dev-backend:
-	cd /home/runner/work/Facttrack/Facttrack && $(PYTHON) -m uvicorn app.main:app --reload
+	cd $(REPO_ROOT) && $(PYTHON) -m uvicorn app.main:app --reload
 
 dev-frontend:
-	cd /home/runner/work/Facttrack/Facttrack/frontend && $(NPM) run dev
+	cd $(FRONTEND_DIR) && $(NPM) run dev
 
 backend-compile:
-	cd /home/runner/work/Facttrack/Facttrack && $(PYTHON) -m compileall app ingestion scripts
+	cd $(REPO_ROOT) && $(PYTHON) -m compileall app ingestion scripts
 
 backend-smoke:
-	cd /home/runner/work/Facttrack/Facttrack && $(PYTHON) -c "from fastapi.testclient import TestClient; from app.main import app; response = TestClient(app).get('/health'); assert response.status_code == 200, response.text; print('backend health smoke test passed')"
+	cd $(REPO_ROOT) && $(PYTHON) -c "from fastapi.testclient import TestClient; from app.main import app; response = TestClient(app).get('/health'); assert response.status_code == 200, response.text; print('backend health smoke test passed')"
 
 backend-validate: backend-compile backend-smoke
 
 frontend-lint:
-	cd /home/runner/work/Facttrack/Facttrack/frontend && $(NPM) run lint
+	cd $(FRONTEND_DIR) && $(NPM) run lint
 
 frontend-build:
-	cd /home/runner/work/Facttrack/Facttrack/frontend && $(NPM) run build
+	cd $(FRONTEND_DIR) && $(NPM) run build
 
 lint: frontend-lint
 
@@ -60,8 +63,8 @@ build: package-backend frontend-build
 validate: backend-validate frontend-lint frontend-build
 
 package-backend:
-	cd /home/runner/work/Facttrack/Facttrack && mkdir -p dist && tar --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' -czf dist/facttrack-backend-src.tar.gz app ingestion scripts requirements.txt README.md .env.example
+	cd $(REPO_ROOT) && mkdir -p dist && tar --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' -czf dist/facttrack-backend-src.tar.gz app ingestion scripts requirements.txt README.md .env.example
 
 clean:
-	cd /home/runner/work/Facttrack/Facttrack && rm -rf dist
-	cd /home/runner/work/Facttrack/Facttrack/frontend && rm -rf dist
+	cd $(REPO_ROOT) && rm -rf dist
+	cd $(FRONTEND_DIR) && rm -rf dist
