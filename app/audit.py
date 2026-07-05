@@ -13,6 +13,8 @@ class AuditLogger:
                          action=action, details=details, previous_hash=prev,
                          entry_hash="", timestamp=datetime.now(timezone.utc))
         payload = {"user_id": str(entry.user_id), "action": entry.action,
+                   "case_id": str(entry.case_id) if entry.case_id else None,
+                   "evidence_id": str(entry.evidence_id) if entry.evidence_id else None,
                    "timestamp": entry.timestamp.isoformat(), "previous_hash": entry.previous_hash, "details": entry.details}
         entry.entry_hash = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
         db.add(entry); await db.flush()

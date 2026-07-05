@@ -15,9 +15,11 @@ def create_token(uid: str, role: str) -> str:
                       settings.JWT_SECRET, algorithm="HS256")
 async def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security),
                            db: AsyncSession = Depends(get_db)) -> User:
-    try: payload = jwt.decode(creds.credentials, settings.JWT_SECRET, algorithms=["HS256"])
+    try:
+        payload = jwt.decode(creds.credentials, settings.JWT_SECRET, algorithms=["HS256"])
+        user_id = uuid.UUID(payload["sub"])
     except Exception: raise HTTPException(401, "Invalid token")
-    res = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+    res = await db.execute(select(User).where(User.id == user_id))
     user = res.scalar_one_or_none()
     if not user or not user.is_active: raise HTTPException(401, "User not found")
     await db.execute(text("SELECT set_config('app.current_user_id', :uid, true)"), {"uid": str(user.id)})
